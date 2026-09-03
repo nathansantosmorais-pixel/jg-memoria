@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jogo da Memória - Carros Realistas</title>
+  <title>Jogo da Velha</title>
   <style>
     * {
       margin: 0;
@@ -13,325 +13,281 @@
 
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(135deg, #0c1222, #1a2332);
+      background: linear-gradient(135deg, #0f172a, #1e293b);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       padding: 20px;
       color: #f1f5f9;
     }
 
     h1 {
-      font-size: 2rem;
-      margin-bottom: 6px;
+      font-size: 2.4rem;
+      margin-bottom: 8px;
       background: linear-gradient(90deg, #38bdf8, #818cf8);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-align: center;
     }
 
-    .subtitle {
+    .status {
+      font-size: 1.3rem;
+      margin-bottom: 28px;
       color: #94a3b8;
-      margin-bottom: 18px;
-      font-size: 0.95rem;
+      min-height: 32px;
+      font-weight: 500;
     }
 
-    .stats {
-      display: flex;
-      gap: 28px;
-      margin-bottom: 22px;
-      font-size: 1.15rem;
-      background: rgba(255,255,255,0.04);
-      padding: 12px 32px;
-      border-radius: 50px;
-      border: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(8px);
-    }
-
-    .stats span {
+    .status span {
       color: #38bdf8;
       font-weight: 700;
     }
 
     .board {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 11px;
-      max-width: 680px;
-      width: 100%;
-      perspective: 1200px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
     }
 
-    .card {
-      aspect-ratio: 1;
-      position: relative;
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 2px solid #334155;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.2rem;
+      font-weight: 700;
       cursor: pointer;
-      transform-style: preserve-3d;
-      transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.25s ease;
+      user-select: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
-    .card:hover:not(.flipped):not(.matched) {
+    .cell:hover:not(.taken) {
+      background: linear-gradient(145deg, #334155, #1e293b);
+      border-color: #38bdf8;
       transform: scale(1.04);
     }
 
-    .card.flipped {
-      transform: rotateY(180deg);
+    .cell.x {
+      color: #38bdf8;
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
     }
 
-    .card.matched {
-      pointer-events: none;
+    .cell.o {
+      color: #f472b6;
+      text-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
     }
 
-    .card.matched .front {
-      box-shadow: 0 0 0 3px #22c55e, 0 8px 25px rgba(34, 197, 94, 0.25);
+    .cell.taken {
+      cursor: not-allowed;
     }
 
-    .face {
-      position: absolute;
-      inset: 0;
-      backface-visibility: hidden;
-      border-radius: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-      overflow: hidden;
-    }
-
-    .back {
-      background: linear-gradient(145deg, #1e293b, #0f172a);
-      border: 2px solid #334155;
-      box-shadow: 
-        inset 0 1px 0 rgba(255,255,255,0.08),
-        0 6px 20px rgba(0,0,0,0.45);
-    }
-
-    .back::before {
-      content: "";
-      position: absolute;
-      inset: 12%;
-      border-radius: 10px;
-      background: linear-gradient(145deg, #334155, #1e293b);
-      border: 1px solid #475569;
-    }
-
-    .back::after {
-      content: "🚗";
-      position: relative;
-      z-index: 1;
-      font-size: 1.7rem;
-      opacity: 0.35;
-    }
-
-    .front {
-      background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
-      border: 2px solid #38bdf8;
-      transform: rotateY(180deg);
-      box-shadow: 
-        0 8px 25px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(255,255,255,0.1);
-      gap: 6px;
-      padding: 8px;
-    }
-
-    .front .car-icon {
-      width: 58%;
-      height: 58%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
-    }
-
-    .front .car-icon svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .front .name {
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: #e2e8f0;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    .cell.winner {
+      background: linear-gradient(145deg, #064e3b, #065f46);
+      border-color: #22c55e;
+      box-shadow: 0 0 25px rgba(34, 197, 94, 0.4);
     }
 
     .controls {
-      margin-top: 26px;
+      margin-top: 32px;
+      display: flex;
+      gap: 16px;
     }
 
     button {
       background: linear-gradient(90deg, #38bdf8, #818cf8);
       color: #0f172a;
       border: none;
-      padding: 13px 32px;
+      padding: 14px 36px;
       border-radius: 50px;
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+      transition: all 0.25s ease;
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.3);
     }
 
     button:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(56, 189, 248, 0.45);
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.45);
     }
 
-    .win-message {
-      position: fixed;
-      inset: 0;
-      background: rgba(8, 12, 22, 0.94);
+    .score {
+      display: flex;
+      gap: 40px;
+      margin-top: 28px;
+      font-size: 1.1rem;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 14px 36px;
+      border-radius: 50px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .score div {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s;
+      gap: 4px;
     }
 
-    .win-message.show {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .win-message h2 {
-      font-size: 2.6rem;
-      margin-bottom: 12px;
-      background: linear-gradient(90deg, #22c55e, #38bdf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .win-message p {
+    .score .label {
+      font-size: 0.85rem;
       color: #94a3b8;
-      margin-bottom: 28px;
-      font-size: 1.25rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    @media (max-width: 700px) {
-      .board {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 8px;
-      }
-      .front .name {
-        font-size: 0.58rem;
-      }
+    .score .value {
+      font-size: 1.5rem;
+      font-weight: 700;
     }
 
-    @media (max-width: 480px) {
-      .board {
-        grid-template-columns: repeat(4, 1fr);
+    .score .x-score .value { color: #38bdf8; }
+    .score .o-score .value { color: #f472b6; }
+    .score .draw-score .value { color: #94a3b8; }
+
+    @media (max-width: 400px) {
+      .cell {
+        width: 85px;
+        height: 85px;
+        font-size: 2.6rem;
       }
-      h1 { font-size: 1.55rem; }
+      h1 {
+        font-size: 1.9rem;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>🏎️ Jogo da Memória</h1>
-  <p class="subtitle">Encontre os 15 pares de veículos realistas!</p>
+  <h1>Jogo da Velha</h1>
+  <div class="status" id="status">Vez do <span>X</span></div>
 
-  <div class="stats">
-    <div>Tempo: <span id="timer">00:00</span></div>
-    <div>Pares: <span id="pairs">0</span>/15</div>
+  <div class="board" id="board">
+    <div class="cell" data-index="0"></div>
+    <div class="cell" data-index="1"></div>
+    <div class="cell" data-index="2"></div>
+    <div class="cell" data-index="3"></div>
+    <div class="cell" data-index="4"></div>
+    <div class="cell" data-index="5"></div>
+    <div class="cell" data-index="6"></div>
+    <div class="cell" data-index="7"></div>
+    <div class="cell" data-index="8"></div>
   </div>
 
-  <div class="board" id="board"></div>
+  <div class="score">
+    <div class="x-score">
+      <span class="label">Jogador X</span>
+      <span class="value" id="scoreX">0</span>
+    </div>
+    <div class="draw-score">
+      <span class="label">Empates</span>
+      <span class="value" id="scoreDraw">0</span>
+    </div>
+    <div class="o-score">
+      <span class="label">Jogador O</span>
+      <span class="value" id="scoreO">0</span>
+    </div>
+  </div>
 
   <div class="controls">
-    <button onclick="restartGame()">Reiniciar</button>
-  </div>
-
-  <div class="win-message" id="winMessage">
-    <h2>Parabéns! 🎉</h2>
-    <p>Você encontrou todos os pares em <span id="finalTime">00:00</span>!</p>
-    <button onclick="restartGame()">Jogar Novamente</button>
+    <button onclick="restartGame()">Reiniciar Partida</button>
   </div>
 
   <script>
-    // SVGs realistas dos veículos
-    const carSVGs = {
-      sedan: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="28" width="52" height="14" rx="4" fill="#3b82f6"/>
-        <path d="M14 28 L20 18 H44 L50 28" fill="#60a5fa"/>
-        <rect x="18" y="20" width="12" height="8" rx="1" fill="#93c5fd" opacity="0.7"/>
-        <rect x="34" y="20" width="12" height="8" rx="1" fill="#93c5fd" opacity="0.7"/>
-        <circle cx="16" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="48" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="16" cy="42" r="2" fill="#64748b"/>
-        <circle cx="48" cy="42" r="2" fill="#64748b"/>
-      </svg>`,
-      
-      suv: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="5" y="24" width="54" height="18" rx="3" fill="#22c55e"/>
-        <path d="M12 24 L18 14 H46 L52 24" fill="#4ade80"/>
-        <rect x="16" y="16" width="14" height="8" rx="1" fill="#86efac" opacity="0.7"/>
-        <rect x="34" y="16" width="14" height="8" rx="1" fill="#86efac" opacity="0.7"/>
-        <circle cx="15" cy="42" r="5.5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="49" cy="42" r="5.5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="15" cy="42" r="2.2" fill="#64748b"/>
-        <circle cx="49" cy="42" r="2.2" fill="#64748b"/>
-      </svg>`,
-      
-      sports: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 34 L14 22 H50 L56 34 L52 38 H12 Z" fill="#ef4444"/>
-        <path d="M16 22 L22 14 H42 L48 22" fill="#f87171"/>
-        <rect x="20" y="16" width="10" height="6" rx="1" fill="#fca5a5" opacity="0.8"/>
-        <rect x="34" y="16" width="10" height="6" rx="1" fill="#fca5a5" opacity="0.8"/>
-        <circle cx="18" cy="40" r="5" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
-        <circle cx="46" cy="40" r="5" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
-        <circle cx="18" cy="40" r="2" fill="#f59e0b"/>
-        <circle cx="46" cy="40" r="2" fill="#f59e0b"/>
-      </svg>`,
-      
-      pickup: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="26" width="36" height="16" rx="2" fill="#f59e0b"/>
-        <rect x="38" y="30" width="22" height="12" rx="1" fill="#d97706"/>
-        <path d="M8 26 L14 16 H32 L38 26" fill="#fbbf24"/>
-        <rect x="14" y="18" width="16" height="8" rx="1" fill="#fde68a" opacity="0.7"/>
-        <circle cx="14" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="48" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="14" cy="42" r="2" fill="#64748b"/>
-        <circle cx="48" cy="42" r="2" fill="#64748b"/>
-      </svg>`,
-      
-      taxi: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="28" width="52" height="14" rx="3" fill="#eab308"/>
-        <path d="M14 28 L20 18 H44 L50 28" fill="#facc15"/>
-        <rect x="18" y="20" width="12" height="8" rx="1" fill="#fef08a" opacity="0.8"/>
-        <rect x="34" y="20" width="12" height="8" rx="1" fill="#fef08a" opacity="0.8"/>
-        <rect x="26" y="14" width="12" height="5" rx="1" fill="#1e293b"/>
-        <text x="32" y="18" text-anchor="middle" font-size="4" fill="#eab308" font-weight="bold">TAXI</text>
-        <circle cx="16" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="48" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-      </svg>`,
-      
-      van: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="20" width="52" height="22" rx="3" fill="#8b5cf6"/>
-        <rect x="10" y="14" width="20" height="8" rx="1" fill="#a78bfa"/>
-        <rect x="12" y="24" width="14" height="10" rx="1" fill="#c4b5fd" opacity="0.6"/>
-        <rect x="30" y="24" width="22" height="10" rx="1" fill="#c4b5fd" opacity="0.4"/>
-        <circle cx="16" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="48" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-      </svg>`,
-      
-      police: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="28" width="52" height="14" rx="3" fill="#1e40af"/>
-        <path d="M14 28 L20 18 H44 L50 28" fill="#3b82f6"/>
-        <rect x="18" y="20" width="12" height="8" rx="1" fill="#93c5fd" opacity="0.7"/>
-        <rect x="34" y="20" width="12" height="8" rx="1" fill="#93c5fd" opacity="0.7"/>
-        <rect x="26" y="12" width="12" height="7" rx="1" fill="#ef4444"/>
-        <circle cx="16" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-        <circle cx="48" cy="42" r="5" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
-      </svg>`,
-      
-      ambulance: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="5" y="22" width="54" height="20" rx="3" fill="#f8fafc"/>
-        <path d="M12 22 L18 12 H36 L42 22" fill="#e2e8f0"/>
-        <rect x="14" y="14" width="20" height="8" rx="1" fill="#cbd5e1" opacity="0.8"/>
-        <rect x="44" y="26" 
+    const cells = document.querySelectorAll('.cell');
+    const status = document.getElementById('status');
+    const scoreX = document.getElementById('scoreX');
+    const scoreO = document.getElementById('scoreO');
+    const scoreDraw = document.getElementById('scoreDraw');
+
+    let board = ['', '', '', '', '', '', '', '', ''];
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let scores = { X: 0, O: 0, draw: 0 };
+
+    const winConditions = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], // linhas
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], // colunas
+      [0, 4, 8], [2, 4, 6]             // diagonais
+    ];
+
+    function handleClick(e) {
+      const index = e.target.dataset.index;
+
+      if (board[index] !== '' || !gameActive) return;
+
+      board[index] = currentPlayer;
+      e.target.textContent = currentPlayer;
+      e.target.classList.add(currentPlayer.toLowerCase(), 'taken');
+
+      if (checkWin()) {
+        status.innerHTML = `<span style="color:${currentPlayer === 'X' ? '#38bdf8' : '#f472b6'}">${currentPlayer}</span> venceu!`;
+        gameActive = false;
+        scores[currentPlayer]++;
+        updateScores();
+        highlightWinner();
+        return;
+      }
+
+      if (board.every(cell => cell !== '')) {
+        status.innerHTML = `Empate!`;
+        gameActive = false;
+        scores.draw++;
+        updateScores();
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      status.innerHTML = `Vez do <span style="color:${currentPlayer === 'X' ? '#38bdf8' : '#f472b6'}">${currentPlayer}</span>`;
+    }
+
+    function checkWin() {
+      return winConditions.some(condition => {
+        const [a, b, c] = condition;
+        return board[a] && board[a] === board[b] && board[a] === board[c];
+      });
+    }
+
+    function highlightWinner() {
+      winConditions.forEach(condition => {
+        const [a, b, c] = condition;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          cells[a].classList.add('winner');
+          cells[b].classList.add('winner');
+          cells[c].classList.add('winner');
+        }
+      });
+    }
+
+    function updateScores() {
+      scoreX.textContent = scores.X;
+      scoreO.textContent = scores.O;
+      scoreDraw.textContent = scores.draw;
+    }
+
+    function restartGame() {
+      board = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = 'X';
+      gameActive = true;
+      status.innerHTML = `Vez do <span>X</span>`;
+
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.classList.remove('x', 'o', 'taken', 'winner');
+      });
+    }
+
+    cells.forEach(cell => cell.addEventListener('click', handleClick));
+  </script>
+</body>
+</html>
